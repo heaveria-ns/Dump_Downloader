@@ -286,3 +286,4 @@ appsettings.production.json
 .idea
 *.db
 *.db-journal
+/Dump Downloader/obj/*
