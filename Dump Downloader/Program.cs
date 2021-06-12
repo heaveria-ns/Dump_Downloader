@@ -1,60 +1,59 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using static Dump_Downloader.DumpService;
 
 namespace Dump_Downloader
 {
-    class Program
+    internal class Program
     {
-        static async Task Main()
+        private static async Task Main()
         {
-            Intro();
-
-            // Gets list of all current dumps. Item1 = names, Item2 = urls.
-            Console.Write("Would you like to backup dumps for nation or region? (N/R): ");
-            string nationOrRegion = Console.ReadLine().ToUpper();
-
-            Console.Write("Please set a User-Agent: ");
-            string uAgent = Console.ReadLine();
-
-            Setup();
-            (List<string>, List<string>) dumpsList;
-            switch (nationOrRegion)
+            try
             {
-                case "N":
-                    dumpsList = GetDumpsList("nations");
-                    nationOrRegion = "nations";
-                    break;
-                case "NATION":
-                    dumpsList = GetDumpsList("nations");
-                    nationOrRegion = "nations";
-                    break;
-                case "R":
-                    dumpsList = GetDumpsList("regions");
-                    nationOrRegion = "regions";
-                    break;
-                case "REGION":
-                    dumpsList = GetDumpsList("regions");
-                    nationOrRegion = "regions";
-                    break;
-                default:
-                    {
-                        Console.WriteLine(
-                            "\nERROR: Your answer was not one of the following: n, r, nation, or region.");
-                        throw new Exception();
-                    }
+                Intro();
+
+                // Gets list of all current dumps. Item1 = names, Item2 = urls.
+                Console.Write("Would you like to backup dumps for nation or region? (N/R): ");
+                string nationOrRegion = Console.ReadLine().ToUpper();
+
+                Console.Write("Please set a User-Agent: ");
+                string uAgent = Console.ReadLine();
+
+                DumpService.Setup();
+                (List<string>, List<string>) dumpsList;
+                switch (nationOrRegion)
+                {
+                    case "N":
+                    case "NATION":
+                        dumpsList = DumpService.GetDumpsList("nations");
+                        nationOrRegion = "nations";
+                        break;
+                    case "R":
+                    case "REGION":
+                        dumpsList = DumpService.GetDumpsList("regions");
+                        nationOrRegion = "regions";
+                        break;
+                    default:
+                        Console.WriteLine("ERROR: Your answer was not one of the following: n, r, nation, or region.");
+                        return;
+                }
+
+                Console.Write("Please enter base path: ");
+                var storageBasePath = Console.ReadLine();
+
+                // Check for existing dumps and return list of everything to get.
+                dumpsList = DumpService.CheckForExistingDumps(dumpsList.Item1, dumpsList.Item2, nationOrRegion, storageBasePath);
+
+                // Download Dumps
+                //await DumpService.DownloadDumps(dumpsList.Item1, dumpsList.Item2, uAgent, nationOrRegion, storageBasePath);
             }
-
-            // Check for existing dumps and return list of everything to get.
-            dumpsList = CheckForExistingDumps(dumpsList.Item1, dumpsList.Item2, nationOrRegion);
-
-            // Download Dumps
-            var storageBasePath = "";
-            await DownloadDumps(dumpsList.Item1, dumpsList.Item2, uAgent, nationOrRegion, storageBasePath);
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex);
+            }
         }
 
-        static void Intro()
+        private static void Intro()
         {
             Console.ForegroundColor = ConsoleColor.Blue;
             Console.Title = "Dump Downloader by Heaveria";

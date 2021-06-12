@@ -1,11 +1,11 @@
-﻿using System;
+﻿using HtmlAgilityPack;
+using ShellProgressBar;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
 using System.Threading.Tasks;
-using HtmlAgilityPack;
-using ShellProgressBar;
 
 namespace Dump_Downloader
 {
@@ -35,9 +35,11 @@ namespace Dump_Downloader
                 case "nations":
                     url = "https://nationstates.s3.amazonaws.com/nations_dump/index.html";
                     break;
+
                 case "regions":
                     url = "https://nationstates.s3.amazonaws.com/regions_dump/index.html";
                     break;
+
                 default:
                     throw new Exception();
             }
@@ -56,36 +58,29 @@ namespace Dump_Downloader
             // Cleanup dumpNames to the desired format of yyyy-mm-dd.xml.gz
             for (int i = 0; i < names.Count; i++)
             {
-                names[i] = names[i].Replace($"{nationOrRegion}_", "");
+                names[i] = names[i].Substring(8).Split(".")[0].Replace("_", "-")+$"-{nationOrRegion}.xml.gz";
             }
 
             return (names, urls);
         }
 
-        public static (List<string> dumpNames, List<string> dumpUrls) CheckForExistingDumps(List<string> dumpNames, List<string> dumpUrls, string nationOrRegion)
+        public static (List<string> dumpNames, List<string> dumpUrls) CheckForExistingDumps(List<string> dumpNames, List<string> dumpUrls, string nationOrRegion, string basepath)
         {
             // Intro
             Console.WriteLine("Checking for existing dump files...");
             // Creates list and adds all existing files into it.
-            List<string> currentDumps = new List<string>();
-            foreach (var dump in Directory.GetFiles($"{Directory.GetCurrentDirectory()}\\Share\\Dumps\\{nationOrRegion}"))
+            var currentDumps = new List<string>();
+            foreach (var dump in Directory.GetFiles(Path.Join(basepath, nationOrRegion)))
             {
-                currentDumps.Add(dump.Split('\\').Last());
+                currentDumps.Add(dump.Split(Path.DirectorySeparatorChar).Last());
             }
-            // Filters out existing files from the dumpNames & dumpUrls list and returns them.
-            for (int i = 0; i < currentDumps.Count; i++)
+            foreach (var urlRemoval in currentDumps
+                .Select((n, i) => dumpNames.FindIndex(dn => dn == n))
+                .Where(i => i > -1)) 
             {
-                string currentFile = currentDumps[i];
-                foreach (var dump in dumpNames.ToList())
-                {
-                    if (dump == currentFile)
-                    {
-                        dumpNames.Remove(dump);
-                        dumpUrls.Remove($"{nationOrRegion}_{dump}");
-                    }
-                }
-                //Console.WriteLine(string.Join(",", dumpUrls));
+                dumpUrls.RemoveAt(urlRemoval);
             }
+            dumpNames = dumpNames.Except(currentDumps).ToList();
             return (dumpNames, dumpUrls);
         }
 
@@ -118,9 +113,11 @@ namespace Dump_Downloader
                     case "nations":
                         path = $"{Directory.GetCurrentDirectory()}\\Share\\Dumps\\nations";
                         break;
+
                     case "regions":
                         path = $"{Directory.GetCurrentDirectory()}\\Share\\Dumps\\regions";
                         break;
+
                     default:
                         throw new Exception("ERROR: Parameter did not indicate if they are for \"nation\" or \"region\"");
                 }
@@ -129,7 +126,7 @@ namespace Dump_Downloader
             }
         }
 
-        static void GzToXML(string xmlPath, string saveLocation)
+        private static void GzToXML(string xmlPath, string saveLocation)
         {
             Stream stream = File.Open(xmlPath, FileMode.Open);
             using (var instream = new GZipStream(stream, CompressionMode.Decompress))
