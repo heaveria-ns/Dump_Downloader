@@ -1,8 +1,6 @@
 ﻿using System;
 using System.IO;
-using System.Net;
 using System.Net.Http;
-using System.Threading;
 using System.Threading.Tasks;
 
 namespace Dump_Downloader
@@ -11,6 +9,7 @@ namespace Dump_Downloader
     {
         private HttpClient _httpClient;
         private bool _isDisposed = false;
+
         public HttpService(string userAgent)
         {
             _httpClient = new HttpClient();
