@@ -84,11 +84,11 @@ namespace Dump_Downloader
             return (dumpNames, dumpUrls);
         }
 
-        public static async Task DownloadDumps(List<string> targetDumpNames, List<string> remoteDumpNames, string userAgent, string nationOrRegion, string storagePath)
+        public static async Task DownloadDumps(List<string> targetDumpNames, List<string> remoteDumpNames, string nationOrRegion, string storagePath)
         {
             // Shell Progress Bar
             int totalTicks = remoteDumpNames.Count;
-            using var _httpService = new HttpService(userAgent);
+            using var _httpService = new HttpService();
 
             var options = new ProgressBarOptions
             {

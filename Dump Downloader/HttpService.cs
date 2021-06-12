@@ -10,13 +10,9 @@ namespace Dump_Downloader
         private HttpClient _httpClient;
         private bool _isDisposed = false;
 
-        public HttpService(string userAgent)
+        public HttpService()
         {
             _httpClient = new HttpClient();
-            if (!string.IsNullOrWhiteSpace(userAgent))
-            {
-                _httpClient.DefaultRequestHeaders.Add("User-Agent", userAgent);
-            }
         }
 
         public void Dispose()

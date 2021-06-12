@@ -16,9 +16,6 @@ namespace Dump_Downloader
                 Console.Write("Would you like to backup dumps for nation or region? (N/R): ");
                 string nationOrRegion = Console.ReadLine().ToUpper();
 
-                Console.Write("Please set a User-Agent: ");
-                string uAgent = Console.ReadLine();
-
                 DumpService.Setup();
                 (List<string>, List<string>) dumpsList;
                 switch (nationOrRegion)
@@ -45,7 +42,7 @@ namespace Dump_Downloader
                 dumpsList = DumpService.CheckForExistingDumps(dumpsList.Item1, dumpsList.Item2, nationOrRegion, storageBasePath);
 
                 // Download Dumps
-                await DumpService.DownloadDumps(dumpsList.Item1, dumpsList.Item2, uAgent, nationOrRegion, storageBasePath);
+                await DumpService.DownloadDumps(dumpsList.Item1, dumpsList.Item2, nationOrRegion, storageBasePath);
             }
             catch (Exception ex)
             {
