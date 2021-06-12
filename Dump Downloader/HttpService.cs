@@ -13,7 +13,10 @@ namespace Dump_Downloader
         public HttpService(string userAgent)
         {
             _httpClient = new HttpClient();
-            _httpClient.DefaultRequestHeaders.Add("User-Agent", userAgent);
+            if (!string.IsNullOrWhiteSpace(userAgent))
+            {
+                _httpClient.DefaultRequestHeaders.Add("User-Agent", userAgent);
+            }
         }
 
         public void Dispose()
@@ -37,7 +40,7 @@ namespace Dump_Downloader
                     using (Stream output = File.OpenWrite(saveLocation))
                     using (Stream input = await response.Content.ReadAsStreamAsync())
                     {
-                        input.CopyTo(output);
+                        await input.CopyToAsync(output);
                     }
                 }
                 else

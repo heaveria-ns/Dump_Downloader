@@ -106,22 +106,7 @@ namespace Dump_Downloader
                 {
                     throw new Exception($"ERROR: The list lengths of dumpNames and dumpUrls do not match. Program will refuse to continue.Names: {targetDumpNames.Count}, Urls: {remoteDumpNames.Count}");
                 }
-                // Set path based on nations or region
-                string path;
-                switch (nationOrRegion)
-                {
-                    case "nations":
-                        path = $"{Directory.GetCurrentDirectory()}\\Share\\Dumps\\nations";
-                        break;
-
-                    case "regions":
-                        path = $"{Directory.GetCurrentDirectory()}\\Share\\Dumps\\regions";
-                        break;
-
-                    default:
-                        throw new Exception("ERROR: Parameter did not indicate if they are for \"nation\" or \"region\"");
-                }
-                await _httpService.SendRequest($"https://nationstates.s3.amazonaws.com/{nationOrRegion}_dump/{remoteDumpNames[i]}", Path.Join(storagePath, targetDumpNames[i]));
+                await _httpService.SendRequest($"https://nationstates.s3.amazonaws.com/{nationOrRegion}_dump/{remoteDumpNames[i]}", Path.Join(storagePath, nationOrRegion, targetDumpNames[i]));
                 pbar.Tick($"Step {i + 1} of {totalTicks}");
             }
         }

@@ -45,7 +45,7 @@ namespace Dump_Downloader
                 dumpsList = DumpService.CheckForExistingDumps(dumpsList.Item1, dumpsList.Item2, nationOrRegion, storageBasePath);
 
                 // Download Dumps
-                //await DumpService.DownloadDumps(dumpsList.Item1, dumpsList.Item2, uAgent, nationOrRegion, storageBasePath);
+                await DumpService.DownloadDumps(dumpsList.Item1, dumpsList.Item2, uAgent, nationOrRegion, storageBasePath);
             }
             catch (Exception ex)
             {
