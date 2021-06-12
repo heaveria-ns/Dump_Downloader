@@ -11,18 +11,6 @@ namespace Dump_Downloader
 {
     public class DumpService
     {
-        public static void Setup()
-        {
-            // Create necessary folders. Nothing happens if they already exist.
-            Console.WriteLine("Getting started...\n" +
-                              "Creating directories...");
-            string path = Directory.GetCurrentDirectory();
-            Directory.CreateDirectory($"{path}\\Share");
-            Directory.CreateDirectory($"{path}\\Share\\Dumps");
-            Directory.CreateDirectory($"{path}\\Share\\Dumps\\nations");
-            Directory.CreateDirectory($"{path}\\Share\\Dumps\\regions");
-        }
-
         public static (List<string>, List<string>) GetDumpsList(string nationOrRegion)
         {
             // Intro

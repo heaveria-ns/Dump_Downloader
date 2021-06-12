@@ -11,43 +11,26 @@ namespace Dump_Downloader
             try
             {
                 Intro();
-
-                // Gets list of all current dumps. Item1 = names, Item2 = urls.
-                Console.Write("Would you like to backup dumps for nation or region? (N/R): ");
-                string nationOrRegion = Console.ReadLine().ToUpper();
-
-                DumpService.Setup();
-                (List<string>, List<string>) dumpsList;
-                switch (nationOrRegion)
-                {
-                    case "N":
-                    case "NATION":
-                        dumpsList = DumpService.GetDumpsList("nations");
-                        nationOrRegion = "nations";
-                        break;
-                    case "R":
-                    case "REGION":
-                        dumpsList = DumpService.GetDumpsList("regions");
-                        nationOrRegion = "regions";
-                        break;
-                    default:
-                        Console.WriteLine("ERROR: Your answer was not one of the following: n, r, nation, or region.");
-                        return;
-                }
-
                 Console.Write("Please enter base path: ");
                 var storageBasePath = Console.ReadLine();
-
-                // Check for existing dumps and return list of everything to get.
-                dumpsList = DumpService.CheckForExistingDumps(dumpsList.Item1, dumpsList.Item2, nationOrRegion, storageBasePath);
-
-                // Download Dumps
-                await DumpService.DownloadDumps(dumpsList.Item1, dumpsList.Item2, nationOrRegion, storageBasePath);
+                await DownloadDumps("nations", storageBasePath);
+                await DownloadDumps("regions", storageBasePath);
             }
             catch (Exception ex)
             {
                 Console.WriteLine(ex);
             }
+        }
+
+        private static async Task DownloadDumps(string nationOrRegion, string storageBasePath)
+        {
+            // Gets list of all current dumps. Item1 = names, Item2 = urls.
+            (List<string>, List<string>) dumpsList = DumpService.GetDumpsList(nationOrRegion);
+            // Check for existing dumps and return list of everything to get.
+            dumpsList = DumpService.CheckForExistingDumps(dumpsList.Item1, dumpsList.Item2, nationOrRegion, storageBasePath);
+
+            // Download Dumps
+            await DumpService.DownloadDumps(dumpsList.Item1, dumpsList.Item2, nationOrRegion, storageBasePath);
         }
 
         private static void Intro()
