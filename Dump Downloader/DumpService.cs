@@ -11,7 +11,7 @@ namespace Dump_Downloader
 {
     public class DumpService
     {
-        public static (List<string>, List<string>) GetDumpsList(string nationOrRegion)
+        public static Dictionary<string, string> GetDumpsList(string nationOrRegion)
         {
             // Intro
             Console.WriteLine("Getting list of dumps from the source archive...");
@@ -46,36 +46,32 @@ namespace Dump_Downloader
             // Cleanup dumpNames to the desired format of yyyy-mm-dd.xml.gz
             for (int i = 0; i < names.Count; i++)
             {
-                names[i] = names[i].Substring(8).Split(".")[0].Replace("_", "-")+$"-{nationOrRegion}.xml.gz";
+                names[i] = names[i].Substring(8).Split(".")[0].Replace("_", "-") + $"-{nationOrRegion}.xml.gz";
             }
 
-            return (names, urls);
+            return names.Zip(urls, (k, v) => new { k, v }).ToDictionary(x => x.k, x => x.v);
         }
 
-        public static (List<string> dumpNames, List<string> dumpUrls) CheckForExistingDumps(List<string> dumpNames, List<string> dumpUrls, string nationOrRegion, string basepath)
+        public static Dictionary<string, string> CheckForExistingDumps(Dictionary<string, string> namesAndUrls, string nationOrRegion, string basepath)
         {
             // Intro
             Console.WriteLine("Checking for existing dump files...");
             // Creates list and adds all existing files into it.
+            var dic = namesAndUrls;
             var currentDumps = new List<string>();
             foreach (var dump in Directory.GetFiles(Path.Join(basepath, nationOrRegion)))
             {
                 currentDumps.Add(dump.Split(Path.DirectorySeparatorChar).Last());
             }
-            foreach (var urlRemoval in currentDumps
-                .Select((n, i) => dumpNames.FindIndex(dn => dn == n))
-                .Where(i => i > -1)) 
-            {
-                dumpUrls.RemoveAt(urlRemoval);
-            }
-            dumpNames = dumpNames.Except(currentDumps).ToList();
-            return (dumpNames, dumpUrls);
+            var neededNames = dic.Keys.Except(currentDumps).ToList();
+            dic.RemoveAll((key, value) => !neededNames.Contains(key));
+            return dic;
         }
 
-        public static async Task DownloadDumps(List<string> targetDumpNames, List<string> remoteDumpNames, string nationOrRegion, string storagePath)
+        public static async Task DownloadDumps(Dictionary<string, string> namesAndUrls, string nationOrRegion, string storagePath)
         {
             // Shell Progress Bar
-            int totalTicks = remoteDumpNames.Count;
+            int totalTicks = namesAndUrls.Count;
             using var _httpService = new HttpService();
 
             var options = new ProgressBarOptions
@@ -87,15 +83,12 @@ namespace Dump_Downloader
                 ProgressBarOnBottom = true,
             };
             using var pbar = new ProgressBar(totalTicks, "Loading dumps", options);
-            for (int i = 0; i < remoteDumpNames.Count; i++)
+            int counter = 0;
+            foreach (var nameAndUrl in namesAndUrls)
             {
-                // Safety check before continuing
-                if (targetDumpNames.Count != remoteDumpNames.Count)
-                {
-                    throw new Exception($"ERROR: The list lengths of dumpNames and dumpUrls do not match. Program will refuse to continue.Names: {targetDumpNames.Count}, Urls: {remoteDumpNames.Count}");
-                }
-                await _httpService.SendRequest($"https://nationstates.s3.amazonaws.com/{nationOrRegion}_dump/{remoteDumpNames[i]}", Path.Join(storagePath, nationOrRegion, targetDumpNames[i]));
-                pbar.Tick($"Step {i + 1} of {totalTicks}");
+                await _httpService.SendRequest($"https://nationstates.s3.amazonaws.com/{nationOrRegion}_dump/{nameAndUrl.Value}", Path.Join(storagePath, nationOrRegion, nameAndUrl.Key));
+                counter++;
+                pbar.Tick($"Step {counter} of {totalTicks}");
             }
         }
 
@@ -105,6 +98,15 @@ namespace Dump_Downloader
             using (var instream = new GZipStream(stream, CompressionMode.Decompress))
             using (var outputStream = new FileStream(saveLocation, FileMode.Append, FileAccess.Write))
                 instream.CopyTo(outputStream);
+        }
+    }
+
+    public static class DictionaryExt
+    {
+        public static void RemoveAll<K, V>(this IDictionary<K, V> dict, Func<K, V, bool> predicate)
+        {
+            foreach (var key in dict.Keys.ToArray().Where(key => predicate(key, dict[key])))
+                dict.Remove(key);
         }
     }
 }

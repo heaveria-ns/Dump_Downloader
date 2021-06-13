@@ -25,12 +25,12 @@ namespace Dump_Downloader
         private static async Task DownloadDumps(string nationOrRegion, string storageBasePath)
         {
             // Gets list of all current dumps. Item1 = names, Item2 = urls.
-            (List<string>, List<string>) dumpsList = DumpService.GetDumpsList(nationOrRegion);
+            var dumpsList = DumpService.GetDumpsList(nationOrRegion);
             // Check for existing dumps and return list of everything to get.
-            dumpsList = DumpService.CheckForExistingDumps(dumpsList.Item1, dumpsList.Item2, nationOrRegion, storageBasePath);
+            dumpsList = DumpService.CheckForExistingDumps(dumpsList, nationOrRegion, storageBasePath);
 
             // Download Dumps
-            await DumpService.DownloadDumps(dumpsList.Item1, dumpsList.Item2, nationOrRegion, storageBasePath);
+            await DumpService.DownloadDumps(dumpsList, nationOrRegion, storageBasePath);
         }
 
         private static void Intro()
