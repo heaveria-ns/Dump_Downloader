@@ -1,66 +1,48 @@
 ﻿using System;
 using System.Collections.Generic;
-using static Dump_Downloader.Dumps;
+using System.Threading.Tasks;
 
 namespace Dump_Downloader
 {
-    class Program
+    internal class Program
     {
-        static void Main(string[] args)
+        private static async Task Main()
         {
-            Intro();
-            
-            // Gets list of all current dumps. Item1 = names, Item2 = urls.
-            Console.Write("Would you like to backup dumps for nation or region? (N/R): ");
-            string nationOrRegion = Console.ReadLine().ToUpper();
-            
-            Console.Write("Please set a User-Agent: ");
-            string uAgent = Console.ReadLine();
-            
-            Setup();
-            (List<string>, List<string>) dumpsList;
-            switch (nationOrRegion)
+            try
             {
-                case "N":
-                    dumpsList = GetDumpsList("nations");
-                    nationOrRegion = "nations";
-                    break;
-                case "NATION":
-                    dumpsList = GetDumpsList("nations");
-                    nationOrRegion = "nations";
-                    break;
-                case "R":
-                    dumpsList = GetDumpsList("regions");
-                    nationOrRegion = "regions";
-                    break;
-                case "REGION":
-                    dumpsList = GetDumpsList("regions");
-                    nationOrRegion = "regions";
-                    break;
-                default:
-                {
-                    Console.WriteLine(
-                        "\nERROR: Your answer was not one of the following: n, r, nation, or region.");
-                    throw new Exception();
-                }
+                Intro();
+                Console.Write("Please enter base path: ");
+                var storageBasePath = Console.ReadLine();
+                await DownloadDumps("nations", storageBasePath);
+                await DownloadDumps("regions", storageBasePath);
             }
-            
-            // Check for existing dumps and return list of everything to get.
-            dumpsList = CheckForExistingDumps(dumpsList.Item1, dumpsList.Item2, nationOrRegion);
-            
-            // Download Dumps
-            
-            DownloadDumps(dumpsList.Item1, dumpsList.Item2, uAgent, nationOrRegion);
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex);
+            }
         }
 
-        static void Intro()
+        private static async Task DownloadDumps(string nationOrRegion, string storageBasePath)
+        {
+            // Gets list of all current dumps. Item1 = names, Item2 = urls.
+            var dumpsList = DumpService.GetDumpsList(nationOrRegion);
+            // Check for existing dumps and return list of everything to get.
+            dumpsList = DumpService.CheckForExistingDumps(dumpsList, nationOrRegion, storageBasePath);
+
+            // Download Dumps
+            await DumpService.DownloadDumps(dumpsList, nationOrRegion, storageBasePath);
+        }
+
+        private static void Intro()
         {
             Console.ForegroundColor = ConsoleColor.Blue;
+            Console.Title = "Dump Downloader by Heaveria";
             Console.WriteLine("Dump Downloader");
             Console.ResetColor();
-            Console.WriteLine("Developed By: Heaveria\n" +
-                              "Archive Sources: https://nationstates.s3.amazonaws.com/regions_dump/index.html\n" +
-                              "                 https://nationstates.s3.amazonaws.com/nations_dump/index.html\n");
+            Console.WriteLine($"Developed By: Heaveria{Environment.NewLine}" +
+                $"Archive Sources: https://nationstates.s3.amazonaws.com/regions_dump/index.html" +
+                $"{Environment.NewLine}" +
+                $"                 https://nationstates.s3.amazonaws.com/nations_dump/index.html\n");
         }
     }
 }
